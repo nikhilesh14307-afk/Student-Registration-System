@@ -1,0 +1,335 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Students — Compact Demo</title>
+
+<style>
+:root{--bg:#f3f6fb;--card:#fff;--accent:#2563eb;--muted:#6b7280}
+*{box-sizing:border-box}
+body{font-family:Inter,system-ui,Arial;background:var(--bg);margin:0;padding:18px;color:#0b1220}
+.wrap{max-width:980px;margin:12px auto;padding:16px;background:var(--card);border-radius:12px;box-shadow:0 8px 22px rgba(2,6,23,.06)}
+.header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.h1{font-size:18px;margin:0}
+.chip{background:#eef4ff;color:#184ea0;padding:6px 10px;border-radius:999px;font-weight:600}
+.row{display:flex;gap:8px;align-items:center}
+.btn{background:var(--accent);color:#fff;padding:8px 12px;border-radius:8px;border:0;cursor:pointer}
+.btn-ghost{background:transparent;border:1px solid #e6e9ef;padding:8px 10px;border-radius:8px;cursor:pointer}
+.card{background:#fff;padding:12px;border-radius:10px;border:1px solid #f1f5f9;margin-top:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:720px){.grid2{grid-template-columns:1fr}}
+input,select,textarea{width:100%;padding:8px;border-radius:8px;border:1px solid #e6e9ef}
+.table{width:100%;border-collapse:collapse;margin-top:8px}
+.table th,.table td{padding:8px;border:1px solid #e6e9ef;text-align:left}
+.thumb{width:48px;height:48px;border-radius:6px;object-fit:cover}
+.small{font-size:13px;color:var(--muted)}
+.hidden{display:none}
+.center{text-align:center}
+.footer{font-size:12px;color:var(--muted);margin-top:10px}
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div style="display:flex;gap:12px;align-items:center">
+      <h1 class="h1">Student Management — Compact</h1>
+      <div class="chip" id="userTag">Not signed in</div>
+    </div>
+    <div class="row">
+      <button class="btn" id="showRegister">Register</button>
+      <button class="btn-ghost" id="showStudents">Students</button>
+      <button class="btn-ghost" id="btnSignUp">Sign Up</button>
+      <button class="btn-ghost" id="btnLogin">Login</button>
+      <button class="btn-ghost hidden" id="btnLogout">Logout</button>
+    </div>
+  </div>
+
+  <div id="message" class="card small">Demo mode (no Firebase). Data stored locally.</div>
+
+  <div id="dashboard" class="card">
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div style="min-width:140px">
+        <div class="small">Total students</div>
+        <div id="totalCount" style="font-weight:700;font-size:18px">0</div>
+      </div>
+      <div style="min-width:180px">
+        <div class="small">Courses breakdown</div>
+        <div id="courseBreak" class="small">—</div>
+      </div>
+    </div>
+  </div>
+
+  <section id="sectionRegister" class="card">
+    <h3 style="margin:0 0 8px">Register Student</h3>
+    <form id="registerForm">
+      <div class="grid2">
+        <div><label class="small">First name *</label><input id="firstName" required pattern="[A-Za-z '\-]{2,50}"></div>
+        <div><label class="small">Last name *</label><input id="lastName" required pattern="[A-Za-z '\-]{2,50}"></div>
+
+        <div><label class="small">DOB *</label><input id="dob" type="date" required></div>
+        <div><label class="small">Gender *</label>
+          <select id="gender" required><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select>
+        </div>
+
+        <div><label class="small">Email *</label><input id="email" type="email" required></div>
+        <div><label class="small">Phone *</label><input id="phone" maxlength="12" inputmode="numeric" placeholder="987-654-3210" required></div>
+
+        <div><label class="small">Student ID *</label><input id="studentId" required></div>
+        <div><label class="small">Course *</label>
+          <select id="course" required><option value="">Select</option><option>B.Sc</option><option>B.Tech</option><option>B.Com</option></select>
+        </div>
+
+        <div><label class="small">Enrollment Year *</label><input id="enrolYear" type="number" min="1950" max="2099" required></div>
+        <div><label class="small">Address *</label><textarea id="address" required rows="2"></textarea></div>
+
+        <div><label class="small">Photo *</label><input id="photo" type="file" accept="image/png,image/jpeg" required></div>
+        <div><label class="small">Docs (PDF)</label><input id="docs" type="file" accept="application/pdf" multiple></div>
+
+        <div><label class="small">Password *</label><input id="password" type="password" minlength="8" required></div>
+        <div><label class="small">Confirm Password *</label><input id="confirmPassword" type="password" required></div>
+      </div>
+
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btn" type="submit">Save</button>
+        <button class="btn-ghost" type="reset">Reset</button>
+      </div>
+    </form>
+  </section>
+
+  <section id="sectionStudents" class="card hidden">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input id="search" placeholder="Search">
+      <select id="filterCourse"><option value="">All</option><option>B.Sc</option><option>B.Tech</option><option>B.Com</option></select>
+      <button class="btn-ghost" id="btnSearch">Search</button>
+      <button class="btn-ghost" id="btnExportCSV">Export CSV</button>
+    </div>
+
+    <table class="table">
+      <thead><tr><th>ID</th><th>Photo</th><th>Name</th><th>Course</th><th>Email</th><th>Phone</th><th>Actions</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </section>
+
+  <div id="modal" class="card hidden" style="position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:90%;max-width:700px;z-index:100">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h4 id="modalTitle" style="margin:0"></h4>
+      <button class="btn-ghost" id="closeModal">Close</button>
+    </div>
+    <div id="modalContent" style="margin-top:8px"></div>
+  </div>
+
+  <div class="footer">Compact student manager (demo). Add Firebase config to enable cloud mode.</div>
+</div>
+
+<script>
+const firebaseConfig = {};
+const ADMIN_EMAILS = ['admin@example.com'];
+const $ = id => document.getElementById(id);
+const show = el => el.classList.remove('hidden');
+const hide = el => el.classList.add('hidden');
+const msg = t => {$('message').textContent = t; setTimeout(()=>{$('message').textContent=''},4000)};
+const formatPhone = v=>{if(!v)return'';const s=v.replace(/\D/g,'');return s.length===10?s.slice(0,3)+'-'+s.slice(3,6)+'-'+s.slice(6):s};
+const cleanPhone = v=>v.replace(/\D/g,'').slice(0,10);
+function readStudents(){return JSON.parse(localStorage.getItem('demo_students')||'[]')}
+function writeStudents(a){localStorage.setItem('demo_students',JSON.stringify(a))}
+function demoCreateUser(e,p){const u=JSON.parse(localStorage.getItem('demo_users')||'[]');if(u.find(x=>x.email===e))throw new Error('User exists');u.push({email:e,password:p});localStorage.setItem('demo_users',JSON.stringify(u))}
+function demoLogin(e,p){const u=JSON.parse(localStorage.getItem('demo_users')||'[]');return u.find(x=>x.email===e&&x.password===p)?{email:e}:null}
+const toDataURL=f=>new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsDataURL(f)});
+
+let currentUser=null;
+function setUser(u){
+  currentUser=u;
+  $('userTag').textContent=u?(u.email+(ADMIN_EMAILS.includes(u.email)?' (Admin)':'')):'Not signed in';
+  if(u){show($('btnLogout'));hide($('btnLogin'));hide($('btnSignUp'))}
+  else{hide($('btnLogout'));show($('btnLogin'));show($('btnSignUp'))}
+  if(u&&ADMIN_EMAILS.includes(u.email)){show($('sectionStudents'));show($('dashboard'));renderStudents()}
+  else{hide($('sectionStudents'));show($('sectionRegister'))}
+}
+
+$('showRegister').onclick=()=>{show($('sectionRegister'));hide($('sectionStudents'));hide($('modal'))};
+$('showStudents').onclick=()=>{hide($('sectionRegister'));show($('sectionStudents'));renderStudents()};
+$('btnSignUp').onclick=()=>{const e=prompt('Sign up email');const p=prompt('Password');if(!e||!p)return;try{demoCreateUser(e,p);msg('Account created')}catch(err){msg(err.message)}};
+$('btnLogin').onclick=()=>{const e=prompt('Email');const p=prompt('Password');if(!e||!p)return;const u=demoLogin(e,p);if(u){setUser(u);msg('Logged in')}else msg('Login failed')};
+$('btnLogout').onclick=()=>{setUser(null);msg('Logged out')};
+
+$('phone').addEventListener('input',function(){let v=this.value.replace(/\D/g,'').slice(0,10),o='';if(v.length>0)o=v.slice(0,3);if(v.length>3)o+='-'+v.slice(3,6);if(v.length>6)o+='-'+v.slice(6);this.value=o});
+
+$('registerForm').onsubmit=async e=>{
+  e.preventDefault();
+  const s={
+    firstName:$('firstName').value.trim(),
+    lastName:$('lastName').value.trim(),
+    dob:$('dob').value,
+    gender:$('gender').value,
+    email:$('email').value.trim(),
+    phone:cleanPhone($('phone').value),
+    studentId:$('studentId').value.trim(),
+    course:$('course').value,
+    enrolYear:$('enrolYear').value,
+    address:$('address').value.trim()
+  };
+  const pw=$('password').value, cpw=$('confirmPassword').value;
+  if(!s.firstName||!s.lastName||!s.email||!s.phone) return msg('Missing fields');
+  if(pw.length<8)return msg('Password too short');
+  if(pw!==cpw)return msg('Password mismatch');
+  if(!/^[0-9]{10}$/.test(s.phone))return msg('Phone must be 10 digits');
+
+  const photo=$('photo').files[0]; if(!photo)return msg('Photo required');
+  if(!['image/png','image/jpeg'].includes(photo.type)||photo.size>1.5*1024*1024)return msg('Invalid photo');
+  const docs=Array.from($('docs').files||[]);
+  const photoURL=await toDataURL(photo);
+  const docsArr=[];
+  for(const d of docs){if(d.size>2*1024*1024)return msg('File too large');docsArr.push({name:d.name,url:await toDataURL(d)})}
+
+  const list=readStudents();
+  const id='stu_'+Date.now().toString(36);
+  list.unshift({...s,uid:id,photoURL,docs:docsArr});
+  writeStudents(list);
+  msg('Saved');
+  e.target.reset();
+  updateDashboard();
+  if(currentUser&&ADMIN_EMAILS.includes(currentUser.email))renderStudents();
+};
+
+async function renderStudents(){
+  const all=readStudents();
+  const q=($('search').value||'').toLowerCase();
+  const fc=$('filterCourse').value;
+  let arr=all.slice();
+  if(q)arr=arr.filter(a=>(a.firstName+' '+a.lastName+' '+a.studentId+' '+a.phone).toLowerCase().includes(q));
+  if(fc)arr=arr.filter(a=>a.course===fc);
+  const tb=$('tbody'); tb.innerHTML='';
+  if(!arr.length){tb.innerHTML='<tr><td colspan=7 class=center>No students</td></tr>';updateDashboard();return}
+  for(const s of arr){
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${s.uid}</td>
+      <td><img class="thumb" src="${s.photoURL||''}"></td>
+      <td>${s.firstName} ${s.lastName}</td>
+      <td>${s.course}</td>
+      <td>${s.email}</td>
+      <td>${formatPhone(s.phone)}</td>
+      <td>
+        <button class="btn-ghost" onclick="viewStudent('${s.uid}')">View</button>
+        <button class="btn-ghost" onclick="editStudent('${s.uid}')">Edit</button>
+        <button class="btn-ghost" onclick="deleteStudent('${s.uid}')">Delete</button>
+        <button class="btn-ghost" onclick="exportPDF('${s.uid}')">PDF</button>
+      </td>`;
+    tb.appendChild(tr);
+  }
+  updateDashboard();
+}
+
+window.viewStudent=uid=>{
+  const s=readStudents().find(x=>x.uid===uid);
+  if(!s)return msg('Not found');
+  $('modalTitle').textContent=s.firstName+' '+s.lastName;
+  $('modalContent').innerHTML=`
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div><img src="${s.photoURL}" style="width:140px;height:140px;border-radius:8px;object-fit:cover"></div>
+      <div>
+        <div><b>ID:</b> ${s.studentId}</div>
+        <div><b>Course:</b> ${s.course}</div>
+        <div><b>Email:</b> ${s.email}</div>
+        <div><b>Phone:</b> ${formatPhone(s.phone)}</div>
+        <div><b>Address:</b> ${s.address}</div>
+      </div>
+    </div>
+    <hr>
+    <b>Docs:</b>
+    <ul>${(s.docs||[]).map(d=>`<li><a href="${d.url}" target="_blank">${d.name}</a></li>`).join('')}</ul>
+  `;
+  show($('modal'));
+};
+
+window.editStudent=uid=>{
+  const s=readStudents().find(x=>x.uid===uid);
+  if(!s)return msg('Not found');
+  $('modalTitle').textContent='Edit '+s.firstName;
+  $('modalContent').innerHTML=`
+    <form id="editForm">
+      <input id="e_first" value="${s.firstName}" required>
+      <input id="e_last" value="${s.lastName}" required>
+      <input id="e_phone" value="${formatPhone(s.phone)}" required>
+      <input id="e_course" value="${s.course}">
+      <textarea id="e_addr">${s.address}</textarea>
+      <label>Photo</label><input id="e_photo" type="file" accept="image/png,image/jpeg">
+      <button class="btn" type="submit">Save</button>
+      <button class="btn-ghost" type="button" id="cancelEdit">Cancel</button>
+    </form>
+  `;
+  show($('modal'));
+
+  $('e_phone').addEventListener('input',function(){
+    let v=this.value.replace(/\D/g,'').slice(0,10),o='';if(v.length>0)o=v.slice(0,3);if(v.length>3)o+='-'+v.slice(3,6);if(v.length>6)o+='-'+v.slice(6);this.value=o;
+  });
+
+  $('cancelEdit').onclick=()=>hide($('modal'));
+
+  $('editForm').onsubmit=async e=>{
+    e.preventDefault();
+    const list=readStudents();
+    const i=list.findIndex(x=>x.uid===uid);
+    if(i<0)return msg('Not found');
+    list[i].firstName=$('e_first').value.trim();
+    list[i].lastName=$('e_last').value.trim();
+    list[i].phone=cleanPhone($('e_phone').value);
+    list[i].course=$('e_course').value;
+    list[i].address=$('e_addr').value;
+    const pf=$('e_photo').files[0];
+    if(pf)list[i].photoURL=await toDataURL(pf);
+    writeStudents(list);
+    hide($('modal'));
+    msg('Updated');
+    renderStudents();
+  };
+};
+
+window.deleteStudent=uid=>{
+  if(!confirm('Delete student?'))return;
+  writeStudents(readStudents().filter(x=>x.uid!==uid));
+  msg('Deleted');
+  renderStudents();
+};
+
+window.exportPDF=uid=>{
+  const {jsPDF}=window.jspdf;
+  const s=readStudents().find(x=>x.uid===uid);
+  if(!s)return msg('Not found');
+  const doc=new jsPDF();
+  doc.text(s.firstName+' '+s.lastName,14,20);
+  doc.text(`ID: ${s.studentId}`,14,28);
+  doc.text(`Course: ${s.course}`,14,34);
+  doc.text(`Email: ${s.email}`,14,40);
+  doc.text(`Phone: ${formatPhone(s.phone)}`,14,46);
+  doc.save(`${s.firstName}_${s.lastName}.pdf`);
+};
+
+$('btnExportCSV').onclick=()=>{
+  const all=readStudents();
+  const rows=all.map(s=>[s.uid,s.firstName,s.lastName,s.studentId,s.course,s.enrolYear,s.email,s.phone,s.address]);
+  const csv=['UID,First,Last,StudentID,Course,Year,Email,Phone,Address',...rows.map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(','))].join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='students.csv';a.click();URL.revokeObjectURL(url);
+};
+
+$('btnSearch').onclick=renderStudents;
+
+$('closeModal').onclick=()=>hide($('modal'));
+
+function updateDashboard(){
+  const all=readStudents();
+  $('totalCount').textContent=all.length;
+  const c={};all.forEach(s=>c[s.course]=(c[s.course]||0)+1);
+  $('courseBreak').textContent=Object.entries(c).map(([k,v])=>`${k}:${v}`).join(' • ')||'—';
+}
+
+updateDashboard();
+renderStudents();
+</script>
+
+</body>
+</html>
