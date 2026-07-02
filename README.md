@@ -29,6 +29,18 @@ A responsive Student Registration System developed using HTML, CSS and JavaScrip
 - Student Record Management
 - Responsive UI Enhancements
 
+## 📸 Application Screenshots
+
+### 🏠 Home
+![Home](screenshots/home.png)
+
+### 📝 Student Details Form
+![Student Details Form](screenshots/student%20details%20form.png)
+
+### 💾 Student Details Stored
+![Student Details Stored](screenshots/student%20details%20stored.png)
+
+
 ## 👨‍💻 Author
 
 **Dommaraju Nikhilesh Raju**
