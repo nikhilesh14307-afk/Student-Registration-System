@@ -40,6 +40,13 @@ A responsive Student Registration System developed using HTML, CSS and JavaScrip
 ### 💾 Student Details Stored
 ![Student Details Stored](screenshots/student%20details%20stored.png)
 
+## 🚀 Project Demo
+
+🌐 **Live Website:**  
+🔗 https://nikhilesh14307-afk.github.io/Student-Registration-System/
+
+👉 **Click here to explore the project:**  
+https://nikhilesh14307-afk.github.io/Student-Registration-System/
 
 ## 👨‍💻 Author
 
